@@ -1,0 +1,10 @@
+# Install Playwright browsers on first run (one-time setup)
+mvn exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install"
+
+# Run all three browsers in parallel (default)
+mvn test
+
+# Run one browser only
+mvn test -Dsuite=testng-chromium
+mvn test -Dsuite=testng-firefox
+mvn test -Dsuite=testng-webkit
