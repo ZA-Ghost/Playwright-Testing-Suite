@@ -1,0 +1,16 @@
+How to run
+
+h# Install Playwright browsers — one-time setup
+mvn exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install"
+
+# Run all workflows on all browsers in parallel
+mvn test
+
+# Run one browser only
+mvn test -Dsuite=testng-chromium
+mvn test -Dsuite=testng-firefox
+mvn test -Dsuite=testng-webkit
+
+# Open a specific trace manually after the run
+mvn exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI \
+  -D exec.args="show-trace traces/chromium/testLogin.zip"
