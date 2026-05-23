@@ -1,10 +1,109 @@
-# Install Playwright browsers — one-time setup
+# SauceDemo Playwright — User Workflow Automation
+
+A modular Playwright test suite that introduces a **workflow layer** above
+the Page Objects — reusable, named user actions that combine authentication,
+form filling, navigation, and data entry into single callable methods.
+
+---
+
+## 📋 Project Overview
+
+This project extends the multi-browser Playwright suite with a dedicated
+`workflows/` package. Each workflow class represents what a real user
+*does* — not just what a page *contains*. Test classes call workflow
+methods like `auth.loginAsStandardUser()` and `checkout.completeFullCheckout()`
+without touching a single CSS selector or page interaction directly.
+
+A `UserData` class centralises all credentials and form values so a
+Credential change is a one-file fix.
+
+---
+
+## 🏗️ Architecture
+src/test/java/
+├── base/
+│   └── BaseTest.java              # Playwright lifecycle + ThreadLocal<Page>
+├── data/
+│   └── UserData.java              # All credentials and form values
+├── pages/
+│   ├── LoginPage.java
+│   ├── InventoryPage.java
+│   ├── CartPage.java
+│   ├── CheckoutInfoPage.java
+│   ├── CheckoutOverviewPage.java
+│   └── ConfirmationPage.java
+├── workflows/
+│   ├── AuthWorkflow.java          # Login, logout, locked-out scenarios
+│   ├── NavigationWorkflow.java    # URL navigation and page title reading
+│   ├── ShoppingWorkflow.java      # Add to cart, badge count, multi-item
+│   └── CheckoutWorkflow.java      # Cart → form → overview → confirmation
+└── tests/
+├── AuthWorkflowTest.java      # 4 auth scenarios
+├── ShoppingWorkflowTest.java  # 4 shopping scenarios
+└── CheckoutWorkflowTest.java  # 4 checkout step assertions
+
+---
+
+## ✅ Test Scenarios
+
+### `AuthWorkflowTest`
+| # | Test | What it validates |
+|---|---|---|
+| 1 | `testValidLogin` | Standard user reaches the inventory page |
+| 2 | `testInvalidPassword` | Wrong password shows credential mismatch error |
+| 3 | `testLockedOutUser` | Locked account shows locked-out error |
+| 4 | `testLogout` | Logout returns to the login page URL |
+
+### `ShoppingWorkflowTest`
+| # | Test | What it validates |
+|---|---|---|
+| 1 | `testInventoryLoads` | Product grid visible and title reads "Products" |
+| 2 | `testAddSingleItemToCart` | Cart badge updates to "1" |
+| 3 | `testAddMultipleItemsToCart` | Cart badge updates to "3" |
+| 4 | `testNavigateToCart` | Cart icon opens the cart page |
+
+### `CheckoutWorkflowTest`
+| # | Test | What it validates |
+|---|---|---|
+| 1 | `testOpenCart` | Cart page loads with correct title |
+| 2 | `testProceedToCheckout` | Checkout form page loads |
+| 3 | `testFillCheckoutInformation` | Form submission reaches order overview |
+| 4 | `testFinishOrder` | Confirmation message is displayed |
+
+---
+
+## 🛠️ Tools & Technologies
+
+| Tool | Version | Purpose |
+|---|---|---|
+| **Java** | 21 | Core programming language |
+| **Playwright** | 1.44.0 | Browser automation |
+| **TestNG** | 7.11.0 | Test framework and parallel execution |
+| **Maven** | — | Dependency management and build |
+
+---
+
+## 💡 Concepts Demonstrated
+
+- **Workflow layer** — business-level actions sit above page objects,
+  keeping test methods intention-revealing and selector-free
+- **Data centralisation** — `UserData` owns all credentials and form
+  values; tests never contain hardcoded strings
+- **Negative testing** — invalid password and locked-out user scenarios
+  exercise error paths, not just the happy path
+- **`waitForFunction()`** — JavaScript polling waits for precise badge
+  count values rather than fixed timeouts
+- **`@BeforeClass` login** — authentication runs once per class,
+  not before every individual test method
+
+---
+
+## 🚀 How to Run
+
 mvn exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install"
 
-# Run all workflows on all browsers in parallel
 mvn test
-
-# Run one browser only
 mvn test -Dsuite=testng-chromium
 mvn test -Dsuite=testng-firefox
 mvn test -Dsuite=testng-webkit
+```
