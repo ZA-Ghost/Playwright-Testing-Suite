@@ -1,10 +1,97 @@
-# Install Playwright browsers on first run (one-time setup)
+SauceDemo Playwright — Multi-Browser Parallel Suite
+
+An end-to-end test suite built with **Playwright for Java** that validates
+the complete SauceDemo purchase journey across Chromium, Firefox, and WebKit
+simultaneously — with zero code changes between browsers.
+
+---
+
+## 📋 Project Overview
+
+This project migrates a Selenium WebDriver suite to Microsoft Playwright,
+replacing WebDriver + WebDriverManager with Playwright's self-contained
+browser engine. All three browser types — Chromium, Firefox, and WebKit
+(Safari's engine) — are bundled inside the Playwright dependency. No
+external driver downloads are needed.
+
+Tests run in parallel using TestNG's `parallel="tests"` with `ThreadLocal<Page>`
+ensuring each browser thread gets a fully isolated Page instance.
+
+---
+
+## 🌐 Browsers Tested
+
+| Browser | Engine | How it runs |
+|---|---|---|
+| **Chromium** | Blink | `playwright.chromium().launch()` |
+| **Firefox** | Gecko | `playwright.firefox().launch()` |
+| **WebKit** | WebKit | `playwright.webkit().launch()` |
+
+---
+
+## ✅ Test Scenarios
+
+| # | Test | What it validates |
+|---|---|---|
+| 1 | `testLogin` | Valid credentials navigate to the Products page |
+| 2 | `testAddToCart` | Cart badge updates to "1" after adding the backpack |
+| 3 | `testGoToCartPage` | Cart icon opens the cart page |
+| 4 | `testCheckoutStart` | Checkout button opens the information form |
+| 5 | `testCheckoutInformation` | Form submission navigates to the order overview |
+| 6 | `testFinishCheckout` | Finish button displays the confirmation message |
+
+
+
+## 🏗️ Architecture
+
+src/test/java/
+├── base/
+│   └── BaseTest.java         # Playwright lifecycle + ThreadLocal<Page>
+├── pages/
+│   ├── LoginPage.java
+│   ├── InventoryPage.java
+│   ├── CartPage.java
+│   ├── CheckoutInfoPage.java
+│   ├── CheckoutOverviewPage.java
+│   └── ConfirmationPage.java
+└── tests/
+└── OnlineOrderTest.java  # 6 priority-ordered @Test methods
+
+
+## 🛠️ Tools & Technologies
+
+| Tool | Version | Purpose |
+|---|---|---|
+| **Java** | 21 | Core programming language |
+| **Playwright** | 1.44.0 | Browser automation — replaces Selenium entirely |
+| **TestNG** | 7.11.0 | Test framework and parallel execution |
+| **Maven** | — | Dependency management and build |
+
+---
+
+## 💡 Concepts Demonstrated
+
+- **Playwright vs Selenium** — `page.fill()`, `page.click()`,
+  `page.waitForLoadState()` replace `findElement`, `sendKeys`, `Thread.sleep()`
+- **ThreadLocal isolation** — parallel browsers never share Page state
+- **`@Parameters` + XML suites** — browser choice driven entirely by config
+- **`setSlowMo()`** — global action pacing replaces per-step `Thread.sleep()`
+- **`waitForLoadState()`** — event-driven waits replace implicit timeouts
+- **WebKit support** — Safari's engine tested without owning a Mac
+
+---
+
+## 🚀 How to Run
+
+```bash
+# Install Playwright browsers — one-time setup
 mvn exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install"
 
-# Run all three browsers in parallel (default)
+# Run all browsers in parallel
 mvn test
 
-# Run one browser only
+# Run one browser
 mvn test -Dsuite=testng-chromium
 mvn test -Dsuite=testng-firefox
 mvn test -Dsuite=testng-webkit
+```
