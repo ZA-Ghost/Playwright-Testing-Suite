@@ -1,16 +1,107 @@
-How to run
+# SauceDemo Playwright — Trace Viewer Integration
 
-h# Install Playwright browsers — one-time setup
+A Playwright suite with full **Trace Viewer** integration — every test
+method generates a `.zip` trace file containing a step-by-step playback
+of every action, DOM snapshot, screenshot, network request, and console
+log. Failed tests open the Trace Viewer automatically.
+
+---
+
+## 📋 Project Overview
+
+Playwright's Trace Viewer is the most powerful debugging tool in the
+framework. This project wraps every `@Test` method with
+`context.tracing().start()` and `context.tracing().stop()` so no test
+run is ever lost. Traces are saved per browser per test method. On
+failure, the viewer opens automatically in the browser. An Extent HTML
+report is also generated with embedded failure screenshots.
+
+---
+
+## 🔍 What the Trace Viewer Shows
+
+Opening any `.zip` trace file gives a full interactive timeline:
+
+- **Before/after DOM snapshot** for every action
+- **Screenshot** at each step — click to see exactly what was visible
+- **Network requests** triggered by each action
+- **Console logs** emitted during the action
+- **Java source reference** — which line of code triggered each step
+
+---
+
+## 🏗️ Architecture
+src/test/java/
+├── base/
+│   └── BaseTest.java                  # @BeforeMethod start trace
+│                                      # @AfterMethod stop + save trace
+├── data/
+│   └── UserData.java
+├── listeners/
+│   └── PlaywrightListener.java        # Logs results to Extent report
+├── pages/                             # All page classes unchanged
+├── utils/
+│   ├── TraceUtil.java                 # Saves trace, opens viewer on failure
+│   ├── ScreenshotUtil.java            # Full-page PNG on failure
+│   └── ExtentReportManager.java       # Singleton Extent instance
+├── workflows/                         # All workflow classes unchanged
+└── tests/
+├── AuthWorkflowTest.java
+├── ShoppingWorkflowTest.java
+└── CheckoutWorkflowTest.java
+
+## 📁 Output After Every Run
+traces/
+├── chromium/
+│   ├── testValidLogin.zip
+│   ├── testAddSingleItemToCart.zip
+│   └── testFinishOrder.zip
+├── firefox/  └── ...
+└── webkit/   └── ...
+screenshots/
+├── chromium/
+│   └── testFinishOrder_2024-01-15_14-32-07.png  ← failure only
+└── ...
+reports/
+└── ExtentReport.html
+
+
+---
+
+## 🛠️ Tools & Technologies
+
+| Tool | Version | Purpose |
+|---|---|---|
+| **Java** | 21 | Core programming language |
+| **Playwright** | 1.44.0 | Browser automation + Trace Viewer |
+| **TestNG** | 7.11.0 | Test framework, listeners, parallel execution |
+| **ExtentReports** | 5.1.2 | HTML report generation |
+| **Apache Commons IO** | 2.15.1 | Screenshot file handling |
+| **Maven** | — | Dependency management and build |
+
+---
+
+💡 Concepts Demonstrated
+
+- **Trace Viewer** — `.zip` trace per test method, auto-opened on failure
+- **`@BeforeMethod` / `@AfterMethod`** — trace lifecycle wraps each test
+- **`setScreenshots(true)` + `setSnapshots(true)`** — full DOM + visual
+  capture after every Playwright action
+- **`ITestResult`** — TestNG result object used to detect failure and
+  trigger viewer + screenshot
+- **`ThreadLocal<BrowserContext>`** — context stored per thread so
+  parallel runs each manage their own trace independently
+- **Automatic Trace Viewer launch** — `ProcessBuilder` opens the viewer
+  as a background process on failure without blocking the suite
+
+---
+
+🚀 How to Run
+
 mvn exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install"
 
-# Run all workflows on all browsers in parallel
 mvn test
 
-# Run one browser only
-mvn test -Dsuite=testng-chromium
-mvn test -Dsuite=testng-firefox
-mvn test -Dsuite=testng-webkit
-
-# Open a specific trace manually after the run
+# Open any trace manually
 mvn exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI \
   -D exec.args="show-trace traces/chromium/testLogin.zip"
